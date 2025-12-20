@@ -35,6 +35,11 @@ public class UserService {
     @org.springframework.context.annotation.Lazy
     private OrderService orderService;
     
+    // MNT: Additional cycle 1 from central PaymentService: PaymentService -> UserService -> PaymentService
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private PaymentService paymentService;
+    
     /**
      * Gets all users
      * 
@@ -131,6 +136,20 @@ public class UserService {
     // MNT: Unused method
     private void logUser(User user) {
         System.out.println("User logged: " + user);
+    }
+    
+    /**
+     * MNT: Additional cycle 1 usage - UserService -> PaymentService -> UserService
+     * 
+     * @param userId User ID
+     * @param amount Payment amount
+     * @return true if payment info retrieved
+     */
+    public boolean getUserPaymentInfo(Long userId, String amount) {
+        // MNT: Using PaymentService creates additional cycle: PaymentService -> UserService -> PaymentService
+        String summary = paymentService.getUserPaymentSummary(userId);
+        System.out.println("Payment summary: " + summary);
+        return summary != null;
     }
 }
 

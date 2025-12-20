@@ -1,5 +1,6 @@
 package com.sonarshowcase.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.List;
  * Category service with infinite recursion.
  * 
  * REL-09: Infinite recursion - no base case
+ * MNT: Part of 6-level circular dependency cycle (architecture violation)
  * 
  * @author SonarShowcase
  */
@@ -20,6 +22,11 @@ public class CategoryService {
      */
     public CategoryService() {
     }
+
+    // MNT: Part of 6-level cycle: ... -> EmailService -> CategoryService -> CounterService -> ...
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private CounterService counterService;
 
     /**
      * MNT: Inefficient recursive implementation
@@ -123,6 +130,18 @@ public class CategoryService {
         } else {
             return id != null ? id : "";
         }
+    }
+    
+    /**
+     * MNT: Part of 6-level cycle - CategoryService -> CounterService -> ...
+     * 
+     * @param categoryId Category to process
+     * @return Count of items in category
+     */
+    public int getCategoryItemCount(String categoryId) {
+        // MNT: Using CounterService creates dependency in 6-level cycle
+        counterService.incrementCounter("category_" + categoryId);
+        return counterService.getGlobalCounter();
     }
 }
 

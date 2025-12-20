@@ -37,6 +37,11 @@ public class OrderService {
     @org.springframework.context.annotation.Lazy
     private UserService userService;
     
+    // MNT: Part of 6-level cycle: ... -> ActivityLogService -> OrderService -> PaymentService -> ...
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private PaymentService paymentService;
+    
     /**
      * Gets all orders
      *
@@ -163,6 +168,19 @@ public class OrderService {
         System.out.println("Processing order for: " + email);
         
         return orderRepository.save(order);
+    }
+    
+    /**
+     * MNT: Part of 6-level cycle - OrderService -> PaymentService -> ...
+     * Completes the 6-level cycle back to PaymentService
+     * 
+     * @param order Order to process payment for
+     * @param cardNumber Credit card number
+     * @return true if payment processed
+     */
+    public boolean processOrderPayment(Order order, String cardNumber) {
+        // MNT: Using PaymentService completes 6-level cycle: OrderService -> PaymentService -> EmailService -> ...
+        return paymentService.processPayment(order, cardNumber, "123");
     }
 }
 

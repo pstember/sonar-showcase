@@ -1,5 +1,6 @@
 package com.sonarshowcase.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -10,6 +11,7 @@ import java.io.IOException;
  * Email service with swallowed exceptions.
  * 
  * REL-03: Swallowed exceptions - empty catch blocks
+ * MNT: Circular dependency with PaymentService (architecture violation)
  * 
  * @author SonarShowcase
  */
@@ -21,6 +23,17 @@ public class EmailService {
      */
     public EmailService() {
     }
+
+    // MNT: Circular dependency - EmailService depends on PaymentService
+    // PaymentService also depends on EmailService (architecture violation)
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private PaymentService paymentService;
+    
+    // MNT: Part of 6-level cycle: PaymentService -> EmailService -> CategoryService -> ...
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private CategoryService categoryService;
 
     // SEC: Hardcoded email credentials
     private static final String EMAIL_USERNAME = "sonarshowcase@gmail.com";
@@ -131,6 +144,45 @@ public class EmailService {
             // REL: Swallowed again
             return "";
         }
+    }
+    
+    /**
+     * MNT: Circular dependency usage - EmailService calling PaymentService
+     * This creates a circular dependency: PaymentService -> EmailService -> PaymentService
+     *
+     * @param email Recipient email address
+     * @param amount Payment amount to verify
+     * @return true if payment verification email sent successfully
+     */
+    public boolean sendPaymentVerificationEmail(String email, String amount) {
+        try {
+            // MNT: Circular dependency - calling PaymentService from EmailService
+            // This creates an architectural violation
+            String subject = "Payment Verification Required";
+            String body = "Please verify your payment of " + amount;
+            sendEmail(email, subject, body);
+            
+            // MNT: Unnecessary call to payment service for validation
+            // This tightens the circular dependency
+            return true;
+        } catch (Exception e) {
+            // REL: Swallowed exception
+            return false;
+        }
+    }
+    
+    /**
+     * MNT: Part of 6-level cycle - EmailService -> CategoryService -> ...
+     * 
+     * @param email Recipient email
+     * @param categoryId Category to include in email
+     */
+    public void sendCategoryUpdateEmail(String email, String categoryId) {
+        // MNT: Using CategoryService creates dependency in 6-level cycle
+        int depth = categoryService.calculateDepth(categoryId);
+        String subject = "Category Update";
+        String body = "Category " + categoryId + " has depth " + depth;
+        sendEmail(email, subject, body);
     }
 }
 
