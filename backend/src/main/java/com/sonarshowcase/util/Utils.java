@@ -208,5 +208,161 @@ public class Utils {
     private static int anotherHelper(int x) {
         return x * 2;
     }
+    
+    // ==================== CODE DUPLICATION (Intentional Maintainability Issue) ====================
+    
+    /**
+     * MNT: Duplicated method - same logic as formatName1, formatName2, formatFullName
+     * 
+     * @param first First name
+     * @param last Last name
+     * @return Formatted full name
+     */
+    public static String combineNames(String first, String last) {
+        if (first == null) first = "";
+        if (last == null) last = "";
+        return first.trim() + " " + last.trim();
+    }
+    
+    /**
+     * MNT: Another duplicated name formatting method
+     * 
+     * @param firstName First name
+     * @param lastName Last name
+     * @return Formatted full name
+     */
+    public static String createFullName(String firstName, String lastName) {
+        if (firstName == null) firstName = "";
+        if (lastName == null) lastName = "";
+        return firstName.trim() + " " + lastName.trim();
+    }
+    
+    /**
+     * MNT: Duplicated method - same as isPositive but with different name
+     * 
+     * @param number Number to check
+     * @return true if number is positive, false otherwise
+     */
+    public static boolean checkIfPositive(int number) {
+        if (number > 0) {
+            if (number != 0) {
+                if (number >= 1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * MNT: Another duplicated positive check
+     * 
+     * @param value Number to check
+     * @return true if number is positive, false otherwise
+     */
+    public static boolean isValuePositive(int value) {
+        if (value > 0) {
+            if (value != 0) {
+                if (value >= 1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * MNT: Duplicated method - same as calculate but with different name
+     * 
+     * @param a First number
+     * @param b Second number
+     * @return Sum of a and b
+     */
+    public static int addNumbers(int a, int b) {
+        int result = a + b;
+        
+        // MNT: Condition is always true - SonarQube will flag this (duplicated)
+        boolean alwaysTrue = true;
+        if (alwaysTrue) {
+            return result;
+        }
+        
+        // MNT: This code is effectively dead but compiles (duplicated)
+        result = a * b;
+        return result;
+    }
+    
+    /**
+     * MNT: Another duplicated calculation method
+     * 
+     * @param x First number
+     * @param y Second number
+     * @return Sum of x and y
+     */
+    public static int sum(int x, int y) {
+        int result = x + y;
+        
+        boolean alwaysTrue = true;
+        if (alwaysTrue) {
+            return result;
+        }
+        
+        result = x * y;
+        return result;
+    }
+    
+    /**
+     * MNT: Duplicated method - same as doStuff but with different name
+     * 
+     * @param input The input string to process
+     * @return The processed string in uppercase
+     */
+    public static String processString(String input) {
+        if (input == null) {
+            return "null input";
+        }
+        
+        String result = input.toUpperCase();
+        
+        // MNT: Unnecessary variable reassignment (duplicated)
+        String temp = result;
+        result = temp;
+        
+        // MNT: Debug print left in code (duplicated)
+        System.out.println("Processing: " + result);
+        
+        return result;
+    }
+    
+    /**
+     * MNT: Another duplicated string processing method
+     * 
+     * @param text The input string to process
+     * @return The processed string in uppercase
+     */
+    public static String transformText(String text) {
+        if (text == null) {
+            return "null input";
+        }
+        
+        String result = text.toUpperCase();
+        
+        String temp = result;
+        result = temp;
+        
+        System.out.println("Processing: " + result);
+        
+        return result;
+    }
 }
 

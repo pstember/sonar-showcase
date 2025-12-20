@@ -239,5 +239,170 @@ public class OrderProcessor {
         
         return true;
     }
+    
+    // ==================== CODE DUPLICATION (Intentional Maintainability Issue) ====================
+    
+    /**
+     * MNT: Duplicated method - same logic as validateOrder but with different name
+     * 
+     * @param order Order data map to validate
+     * @return true if order is valid, false otherwise
+     */
+    public boolean checkOrderValidity(Map<String, Object> order) {
+        if (order == null) return false;
+        if (!order.containsKey("customer")) return false;
+        if (!order.containsKey("items")) return false;
+        if (!order.containsKey("payment")) return false;
+        if (!order.containsKey("shipping")) return false;
+        
+        Object customer = order.get("customer");
+        if (customer == null) return false;
+        if (!(customer instanceof Map)) return false;
+        
+        Map<?, ?> customerMap = (Map<?, ?>) customer;
+        if (!customerMap.containsKey("id")) return false;
+        if (!customerMap.containsKey("email")) return false;
+        
+        Object items = order.get("items");
+        if (items == null) return false;
+        if (!(items instanceof List)) return false;
+        if (((List<?>) items).isEmpty()) return false;
+        
+        return true;
+    }
+    
+    /**
+     * MNT: Another duplicated validation method
+     * 
+     * @param orderData Order data map to validate
+     * @return true if order is valid, false otherwise
+     */
+    public boolean isValidOrder(Map<String, Object> orderData) {
+        if (orderData == null) return false;
+        if (!orderData.containsKey("customer")) return false;
+        if (!orderData.containsKey("items")) return false;
+        if (!orderData.containsKey("payment")) return false;
+        if (!orderData.containsKey("shipping")) return false;
+        
+        Object customer = orderData.get("customer");
+        if (customer == null) return false;
+        if (!(customer instanceof Map)) return false;
+        
+        Map<?, ?> customerMap = (Map<?, ?>) customer;
+        if (!customerMap.containsKey("id")) return false;
+        if (!customerMap.containsKey("email")) return false;
+        
+        Object items = orderData.get("items");
+        if (items == null) return false;
+        if (!(items instanceof List)) return false;
+        if (((List<?>) items).isEmpty()) return false;
+        
+        return true;
+    }
+    
+    /**
+     * MNT: Duplicated complex processing logic - similar to processOrder
+     * 
+     * @param orderData Order data map
+     * @param customerType Type of customer
+     * @param isPriority Whether order is priority
+     * @return Processing result string
+     */
+    public String handleOrder(Map<String, Object> orderData, String customerType, boolean isPriority) {
+        String result = "";
+        BigDecimal total = BigDecimal.ZERO;
+        boolean isValid = true;
+        int itemCount = 0;
+        
+        // Duplicated nested complexity
+        if (orderData != null) {
+            if (orderData.containsKey("items")) {
+                Object items = orderData.get("items");
+                if (items instanceof List) {
+                    List<?> itemList = (List<?>) items;
+                    if (!itemList.isEmpty()) {
+                        for (Object item : itemList) {
+                            if (item instanceof Map) {
+                                Map<?, ?> itemMap = (Map<?, ?>) item;
+                                if (itemMap.containsKey("price")) {
+                                    Object priceObj = itemMap.get("price");
+                                    if (priceObj instanceof Number) {
+                                        BigDecimal price = new BigDecimal(priceObj.toString());
+                                        if (price.compareTo(BigDecimal.ZERO) > 0) {
+                                            if (itemMap.containsKey("quantity")) {
+                                                Object qtyObj = itemMap.get("quantity");
+                                                if (qtyObj instanceof Number) {
+                                                    int qty = ((Number) qtyObj).intValue();
+                                                    if (qty > 0) {
+                                                        total = total.add(price.multiply(new BigDecimal(qty)));
+                                                        itemCount += qty;
+                                                    } else {
+                                                        isValid = false;
+                                                    }
+                                                } else {
+                                                    isValid = false;
+                                                }
+                                            } else {
+                                                total = total.add(price);
+                                                itemCount++;
+                                            }
+                                        } else {
+                                            isValid = false;
+                                        }
+                                    } else {
+                                        isValid = false;
+                                    }
+                                } else {
+                                    isValid = false;
+                                }
+                            } else {
+                                isValid = false;
+                            }
+                        }
+                    } else {
+                        isValid = false;
+                    }
+                } else {
+                    isValid = false;
+                }
+            } else {
+                isValid = false;
+            }
+        } else {
+            isValid = false;
+        }
+        
+        // Duplicated discount logic
+        if (isValid) {
+            if (customerType != null) {
+                if (customerType.equals("VIP")) {
+                    if (isPriority) {
+                        total = total.multiply(new BigDecimal("0.70"));
+                    } else {
+                        total = total.multiply(new BigDecimal("0.80"));
+                    }
+                } else if (customerType.equals("GOLD")) {
+                    if (isPriority) {
+                        total = total.multiply(new BigDecimal("0.80"));
+                    } else {
+                        total = total.multiply(new BigDecimal("0.85"));
+                    }
+                } else if (customerType.equals("SILVER")) {
+                    if (isPriority) {
+                        total = total.multiply(new BigDecimal("0.85"));
+                    } else {
+                        total = total.multiply(new BigDecimal("0.90"));
+                    }
+                }
+            }
+            
+            result = "Order handled. Total: $" + total.setScale(2, BigDecimal.ROUND_HALF_UP) + 
+                     ", Items: " + itemCount;
+        } else {
+            result = "Invalid order data";
+        }
+        
+        return result;
+    }
 }
 

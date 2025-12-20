@@ -1,6 +1,7 @@
 package com.sonarshowcase.service;
 
 import com.sonarshowcase.model.Order;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.net.URL;
  * Payment service with hardcoded API keys.
  * 
  * SEC-03: Hardcoded API keys and secrets
+ * MNT: Circular dependency with EmailService (architecture violation)
  * 
  * @author SonarShowcase
  */
@@ -22,6 +24,24 @@ public class PaymentService {
      */
     public PaymentService() {
     }
+
+    // MNT: Circular dependency - PaymentService depends on EmailService
+    // EmailService also depends on PaymentService (architecture violation)
+    // Part of 6-level cycle: PaymentService -> EmailService -> CategoryService -> CounterService -> ActivityLogService -> OrderService -> PaymentService
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private EmailService emailService;
+    
+    // MNT: Additional cycle 1 from central PaymentService: PaymentService -> UserService -> PaymentService
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private UserService userService;
+    
+    // MNT: Additional cycle 2 from central PaymentService: PaymentService -> CounterService -> PaymentService
+    // Note: CounterService is also part of the 6-level cycle, creating multiple dependency paths
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private CounterService counterService;
 
     // SEC: Hardcoded Stripe API keys - S6418
     // NOTE: These are intentionally fake keys for demo purposes (SonarQube security demo)
@@ -69,7 +89,14 @@ public class PaymentService {
             conn.setRequestProperty("Authorization", "Bearer " + STRIPE_SECRET_KEY);
             
             // REL: Not closing connection
-            return conn.getResponseCode() == 200;
+            boolean success = conn.getResponseCode() == 200;
+            
+            // MNT: Circular dependency usage - PaymentService calling EmailService
+            if (success && order.getUser() != null) {
+                emailService.sendOrderConfirmation(order.getUser().getEmail(), order.getOrderNumber());
+            }
+            
+            return success;
             
         } catch (Exception e) {
             // REL: Swallowing exception
@@ -123,6 +150,28 @@ public class PaymentService {
     public String getStripeKey() {
         // SEC: Exposing secret key through method
         return STRIPE_SECRET_KEY;
+    }
+    
+    /**
+     * MNT: Additional cycle 1 usage - PaymentService -> UserService -> PaymentService
+     * 
+     * @param userId User ID to get payment info for
+     * @return User payment summary
+     */
+    public String getUserPaymentSummary(Long userId) {
+        // MNT: Using UserService creates additional cycle: PaymentService -> UserService -> PaymentService
+        com.sonarshowcase.model.User user = userService.getUserById(userId);
+        return "Payment info for user: " + (user != null ? user.getUsername() : "unknown");
+    }
+    
+    /**
+     * MNT: Additional cycle 2 usage - PaymentService -> CounterService -> PaymentService
+     * 
+     * @param transactionId Transaction ID
+     */
+    public void trackPaymentTransaction(String transactionId) {
+        // MNT: Using CounterService creates additional cycle: PaymentService -> CounterService -> PaymentService
+        counterService.incrementCounter("payment_" + transactionId);
     }
 }
 

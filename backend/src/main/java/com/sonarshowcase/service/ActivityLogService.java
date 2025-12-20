@@ -34,6 +34,11 @@ public class ActivityLogService {
     @PersistenceContext
     private EntityManager entityManager;
     
+    // MNT: Part of 6-level cycle: ... -> CounterService -> ActivityLogService -> OrderService -> ...
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private OrderService orderService;
+    
     /**
      * Gets all activity logs
      * 
@@ -218,6 +223,17 @@ public class ActivityLogService {
             log.setTimestamp(new java.util.Date());
         }
         return activityLogRepository.save(log);
+    }
+    
+    /**
+     * MNT: Part of 6-level cycle - ActivityLogService -> OrderService -> ...
+     * 
+     * @param userId User ID
+     * @return Number of orders for user
+     */
+    public int getOrderCountForUser(Long userId) {
+        // MNT: Using OrderService creates dependency in 6-level cycle
+        return orderService.getOrderCountByUser(userId);
     }
 }
 
