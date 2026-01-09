@@ -45,7 +45,7 @@ public class OpenApiConfig {
 
         Info info = new Info()
                 .title("SonarShowcase API")
-                .version("1.0.0")
+                .version("1.2.0")
                 .contact(contact)
                 .description("""
                         SonarShowcase REST API Documentation

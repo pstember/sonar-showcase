@@ -43,7 +43,7 @@ public class HealthController {
         response.put("status", "UP");
         response.put("timestamp", new Date());
         response.put("application", "SonarShowcase");
-        response.put("version", "1.0.0"); // MNT: Hardcoded version
+        response.put("version", "1.2.0"); // MNT: Hardcoded version
         
         // MNT: Debug output
         System.out.println("Health check called at: " + new Date());

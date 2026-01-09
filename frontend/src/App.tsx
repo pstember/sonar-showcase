@@ -24,7 +24,7 @@ function App() {
   // MNT: Hardcoded values
   const apiUrl = 'http://localhost:8080/api'
   const appName = 'SonarShowcase'
-  const version = '1.0.0'
+  const version = '1.2.0'
   
   // MNT: Magic numbers
   const maxRetries = 3
