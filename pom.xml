@@ -34,8 +34,6 @@
         <sonar.projectKey>sonarcloud-demos_showcase</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.organization>sonarcloud-demos</sonar.organization>
-        <sonar.sources>.</sonar.sources>
-        <sonar.exclusions>frontend/**,backend/**</sonar.exclusions>
     </properties>
 
     <dependencyManagement>

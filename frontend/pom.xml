@@ -20,7 +20,7 @@
         <!-- SonarQube module key - must be unique for each module -->
         <sonar.moduleKey>${sonar.projectKey}:${project.artifactId}</sonar.moduleKey>
         <!-- SonarQube configuration for TypeScript/JavaScript sources -->
-        <sonar.sources>src</sonar.sources>
+        <sonar.sources>.</sonar.sources>
         <sonar.test.inclusions>**/*.test.ts,**/*.test.tsx</sonar.test.inclusions>
         <sonar.exclusions>**/node_modules/**,**/dist/**,**/build/**,**/*.config.js,**/*.config.ts</sonar.exclusions>
         <sonar.typescript.lcov.reportPaths>coverage/lcov.info</sonar.typescript.lcov.reportPaths>
