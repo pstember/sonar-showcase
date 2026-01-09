@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - develop
   workflow_dispatch:  # Allows manual triggering
 
 # Sets permissions for GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -13,9 +14,9 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment
+# Allow concurrent deployments for prod and dev
 concurrency:
-  group: "pages"
+  group: "pages-${{ github.ref_name }}"
   cancel-in-progress: false
 
 jobs:
@@ -130,22 +131,51 @@ jobs:
             echo "⚠️  Frontend TypeDoc NOT found"
           fi
 
+      - name: Determine documentation version
+        id: doc-version
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]] || [[ "${{ github.ref_name }}" == "master" ]]; then
+            echo "version=prod" >> $GITHUB_OUTPUT
+            echo "version_label=Production" >> $GITHUB_OUTPUT
+            echo "version_color=#4CAF50" >> $GITHUB_OUTPUT
+            echo "version_badge=🟢 PROD" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+            echo "version=dev" >> $GITHUB_OUTPUT
+            echo "version_label=Development" >> $GITHUB_OUTPUT
+            echo "version_color=#2196F3" >> $GITHUB_OUTPUT
+            echo "version_badge=🔵 DEV" >> $GITHUB_OUTPUT
+          else
+            echo "version=dev" >> $GITHUB_OUTPUT
+            echo "version_label=Development" >> $GITHUB_OUTPUT
+            echo "version_color=#2196F3" >> $GITHUB_OUTPUT
+            echo "version_badge=🔵 DEV" >> $GITHUB_OUTPUT
+          fi
+          echo "📦 Documentation version: ${{ steps.doc-version.outputs.version }} (${{ steps.doc-version.outputs.version_label }})"
+
       - name: Prepare documentation site
         run: |
           # Create a docs-site directory for GitHub Pages
           mkdir -p docs-site
           
+          # Determine target directory based on version
+          VERSION="${{ steps.doc-version.outputs.version }}"
+          VERSION_LABEL="${{ steps.doc-version.outputs.version_label }}"
+          VERSION_COLOR="${{ steps.doc-version.outputs.version_color }}"
+          VERSION_BADGE="${{ steps.doc-version.outputs.version_badge }}"
+          TARGET_DIR="docs-site/$VERSION"
+          mkdir -p "$TARGET_DIR"
+          
           # Get the build timestamp in a readable format
           BUILD_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
           
-          # Create index page that links to both documentation sets
-          cat > docs-site/index.html << EOF
+          # Create version-specific index page
+          cat > "$TARGET_DIR/index.html" << EOF
           <!DOCTYPE html>
           <html lang="en">
           <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>SonarShowcase Documentation</title>
+              <title>SonarShowcase Documentation - $VERSION_LABEL</title>
               <style>
                   body {
                       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -162,8 +192,39 @@ jobs:
                   }
                   h1 {
                       color: #333;
-                      border-bottom: 3px solid #4CAF50;
+                      border-bottom: 3px solid $VERSION_COLOR;
                       padding-bottom: 10px;
+                  }
+                  .version-badge {
+                      display: inline-block;
+                      padding: 4px 12px;
+                      background: $VERSION_COLOR;
+                      color: white;
+                      border-radius: 4px;
+                      font-size: 0.8em;
+                      font-weight: bold;
+                      margin-left: 10px;
+                  }
+                  .version-switcher {
+                      margin-top: 20px;
+                      padding: 15px;
+                      background: #f0f0f0;
+                      border-radius: 4px;
+                      text-align: center;
+                  }
+                  .version-switcher a {
+                      display: inline-block;
+                      margin: 0 10px;
+                      padding: 8px 16px;
+                      background: white;
+                      color: #333;
+                      text-decoration: none;
+                      border-radius: 4px;
+                      border: 2px solid #ddd;
+                  }
+                  .version-switcher a:hover {
+                      border-color: $VERSION_COLOR;
+                      color: $VERSION_COLOR;
                   }
                   .docs-grid {
                       display: grid;
@@ -185,20 +246,20 @@ jobs:
                   }
                   .doc-card h2 {
                       margin-top: 0;
-                      color: #4CAF50;
+                      color: $VERSION_COLOR;
                   }
                   .doc-card a {
                       display: inline-block;
                       margin-top: 15px;
                       padding: 10px 20px;
-                      background: #4CAF50;
+                      background: $VERSION_COLOR;
                       color: white;
                       text-decoration: none;
                       border-radius: 4px;
                       font-weight: bold;
                   }
                   .doc-card a:hover {
-                      background: #45a049;
+                      opacity: 0.9;
                   }
                   .description {
                       color: #666;
@@ -208,8 +269,14 @@ jobs:
           </head>
           <body>
               <div class="container">
-                  <h1>📚 SonarShowcase Documentation</h1>
-                  <p>Welcome to the API documentation for the SonarShowcase project. Select a documentation set below:</p>
+                  <h1>📚 SonarShowcase Documentation <span class="version-badge">$VERSION_BADGE</span></h1>
+                  <p>Welcome to the API documentation for the SonarShowcase project ($VERSION_LABEL version). Select a documentation set below:</p>
+                  
+                  <div class="version-switcher">
+                      <strong>Switch version:</strong>
+                      <a href="../prod/">🟢 Production</a>
+                      <a href="../dev/">🔵 Development</a>
+                  </div>
                   
                   <div class="docs-grid">
                       <div class="doc-card">
@@ -256,21 +323,21 @@ jobs:
           
           echo "📁 Copying JavaDoc from: $JAVADOC_SOURCE"
           # Remove existing backend directory to avoid nested structures
-          rm -rf docs-site/backend
-          mkdir -p docs-site/backend
+          rm -rf "$TARGET_DIR/backend"
+          mkdir -p "$TARGET_DIR/backend"
           # Copy all files and directories from JavaDoc source to backend
-          cp -r "$JAVADOC_SOURCE"/* docs-site/backend/ 2>/dev/null || true
+          cp -r "$JAVADOC_SOURCE"/* "$TARGET_DIR/backend/" 2>/dev/null || true
           # Also copy hidden files if any
-          cp -r "$JAVADOC_SOURCE"/.[!.]* docs-site/backend/ 2>/dev/null || true
-          echo "✅ Backend JavaDoc copied"
+          cp -r "$JAVADOC_SOURCE"/.[!.]* "$TARGET_DIR/backend/" 2>/dev/null || true
+          echo "✅ Backend JavaDoc copied to $TARGET_DIR/backend"
           # Verify index.html exists
-          if [ -f "docs-site/backend/index.html" ]; then
-            echo "✅ Backend index.html found at docs-site/backend/index.html"
-            echo "   Backend docs file count: $(find docs-site/backend -type f | wc -l) files"
+          if [ -f "$TARGET_DIR/backend/index.html" ]; then
+            echo "✅ Backend index.html found at $TARGET_DIR/backend/index.html"
+            echo "   Backend docs file count: $(find "$TARGET_DIR/backend" -type f | wc -l) files"
           else
             echo "❌ Backend index.html NOT found after copy"
-            echo "   Files in docs-site/backend/:"
-            ls -la docs-site/backend/ | head -20
+            echo "   Files in $TARGET_DIR/backend/:"
+            ls -la "$TARGET_DIR/backend/" | head -20
             echo "   Source directory ($JAVADOC_SOURCE) contents:"
             ls -la "$JAVADOC_SOURCE" | head -20
             exit 1
@@ -278,16 +345,140 @@ jobs:
           
           # Copy frontend TypeDoc
           if [ -d "frontend/target/site/typedoc" ]; then
-            mkdir -p docs-site/frontend
-            cp -r frontend/target/site/typedoc/* docs-site/frontend/
-            echo "✅ Frontend TypeDoc copied"
+            mkdir -p "$TARGET_DIR/frontend"
+            cp -r frontend/target/site/typedoc/* "$TARGET_DIR/frontend/"
+            echo "✅ Frontend TypeDoc copied to $TARGET_DIR/frontend"
           else
             echo "⚠️  Frontend TypeDoc not found"
           fi
           
+          # Update links in the index to point to relative paths
+          sed -i.bak "s|href=\"./backend/|href=\"./backend/|g" "$TARGET_DIR/index.html"
+          sed -i.bak "s|href=\"./frontend/|href=\"./frontend/|g" "$TARGET_DIR/index.html"
+          rm -f "$TARGET_DIR/index.html.bak"
+          
+          # Create or update main index page that links to both versions
+          cat > docs-site/index.html << 'MAIN_INDEX'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>SonarShowcase Documentation</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      padding: 40px 20px;
+                      background: #f5f5f5;
+                  }
+                  .container {
+                      background: white;
+                      border-radius: 8px;
+                      padding: 40px;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                  }
+                  h1 {
+                      color: #333;
+                      border-bottom: 3px solid #4CAF50;
+                      padding-bottom: 10px;
+                  }
+                  .version-grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      gap: 20px;
+                      margin-top: 30px;
+                  }
+                  .version-card {
+                      border: 2px solid #e0e0e0;
+                      border-radius: 8px;
+                      padding: 30px;
+                      transition: all 0.3s;
+                      background: #fafafa;
+                      text-align: center;
+                  }
+                  .version-card.prod {
+                      border-color: #4CAF50;
+                  }
+                  .version-card.dev {
+                      border-color: #2196F3;
+                  }
+                  .version-card:hover {
+                      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                      transform: translateY(-2px);
+                  }
+                  .version-card h2 {
+                      margin-top: 0;
+                  }
+                  .version-card.prod h2 {
+                      color: #4CAF50;
+                  }
+                  .version-card.dev h2 {
+                      color: #2196F3;
+                  }
+                  .version-card a {
+                      display: inline-block;
+                      margin-top: 15px;
+                      padding: 12px 24px;
+                      color: white;
+                      text-decoration: none;
+                      border-radius: 4px;
+                      font-weight: bold;
+                  }
+                  .version-card.prod a {
+                      background: #4CAF50;
+                  }
+                  .version-card.prod a:hover {
+                      background: #45a049;
+                  }
+                  .version-card.dev a {
+                      background: #2196F3;
+                  }
+                  .version-card.dev a:hover {
+                      background: #1976D2;
+                  }
+                  .description {
+                      color: #666;
+                      line-height: 1.6;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>📚 SonarShowcase Documentation</h1>
+                  <p>Welcome to the API documentation for the SonarShowcase project. Select a version below:</p>
+                  
+                  <div class="version-grid">
+                      <div class="version-card prod">
+                          <h2>🟢 Production</h2>
+                          <p class="description">
+                              Stable production documentation from the main/master branch. This represents the current production release.
+                          </p>
+                          <a href="./prod/">View Production Docs →</a>
+                      </div>
+                      
+                      <div class="version-card dev">
+                          <h2>🔵 Development</h2>
+                          <p class="description">
+                              Latest development documentation from the develop branch. This includes the most recent changes and may be unstable.
+                          </p>
+                          <a href="./dev/">View Development Docs →</a>
+                      </div>
+                  </div>
+                  
+                  <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0; color: #999; font-size: 0.9em;">
+                      <p>📝 Documentation is automatically generated from source code during the build process.</p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          MAIN_INDEX
+          
           # List what we have
           echo "📁 Documentation site structure:"
           find docs-site -type f -name "*.html" | head -10
+          echo "✅ Documentation prepared for ${{ steps.doc-version.outputs.version_label }} version"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
