@@ -42,6 +42,15 @@ public class OrderService {
     @org.springframework.context.annotation.Lazy
     private PaymentService paymentService;
     
+    // MNT: Adding NotificationService integration
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private NotificationService notificationService;
+    
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private WebhookService webhookService;
+    
     /**
      * Gets all orders
      *
@@ -91,7 +100,18 @@ public class OrderService {
         order.setOrderDate(new Date());
         order.setStatus("PENDING"); // MNT: Magic string
         
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        
+        // MNT: Trigger notification on order creation
+        try {
+            notificationService.sendOrderConfirmation(user, savedOrder);
+            // MNT: Trigger webhook for order event
+            webhookService.triggerOrderWebhook("order.created", "{\"orderId\":" + savedOrder.getId() + "}");
+        } catch (Exception e) {
+            // REL: Swallowed exception - notification failure shouldn't break order creation
+        }
+        
+        return savedOrder;
     }
     
     /**
@@ -167,7 +187,17 @@ public class OrderService {
         // MNT: Debug print
         System.out.println("Processing order for: " + email);
         
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        
+        // MNT: Trigger notification on order processing
+        try {
+            notificationService.sendOrderShipped(order.getUser(), savedOrder);
+            webhookService.triggerOrderWebhook("order.processing", "{\"orderId\":" + savedOrder.getId() + "}");
+        } catch (Exception e) {
+            // REL: Swallowed exception
+        }
+        
+        return savedOrder;
     }
     
     /**
