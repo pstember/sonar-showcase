@@ -41,7 +41,7 @@ class CounterServiceTest {
             paymentField.setAccessible(true);
             paymentField.set(counterService, paymentService);
         } catch (Exception e) {
-            // If reflection fails, tests will use real services
+            throw new RuntimeException("Failed to inject mocks via reflection", e);
         }
     }
     
@@ -188,7 +188,7 @@ class CounterServiceTest {
         
         counterService.logCounterActivity(userId);
         
-        verify(activityLogService, times(1)).createActivityLog(any());
+        verify(activityLogService, times(1)).createActivityLog(any(com.sonarshowcase.model.ActivityLog.class));
     }
     
     @Test
@@ -197,7 +197,7 @@ class CounterServiceTest {
         counterService.logCounterActivity(1L);
         counterService.logCounterActivity(2L);
         
-        verify(activityLogService, times(2)).createActivityLog(any());
+        verify(activityLogService, times(2)).createActivityLog(any(com.sonarshowcase.model.ActivityLog.class));
     }
     
     @Test
@@ -205,7 +205,7 @@ class CounterServiceTest {
     void testLogCounterActivity_nullUserId() {
         counterService.logCounterActivity(null);
         
-        verify(activityLogService, times(1)).createActivityLog(any());
+        verify(activityLogService, times(1)).createActivityLog(any(com.sonarshowcase.model.ActivityLog.class));
     }
     
     @Test

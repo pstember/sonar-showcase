@@ -55,7 +55,7 @@ class PaymentServiceTest {
             counterField.setAccessible(true);
             counterField.set(paymentService, counterService);
         } catch (Exception e) {
-            // If reflection fails, tests will use real services
+            throw new RuntimeException("Failed to inject mocks via reflection", e);
         }
         
         testUser = new User();
@@ -102,7 +102,7 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should handle payment with null order")
     void testProcessPayment_nullOrder() {
-        assertThrows(Exception.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             paymentService.processPayment(null, "4111111111111111", "123");
         });
     }

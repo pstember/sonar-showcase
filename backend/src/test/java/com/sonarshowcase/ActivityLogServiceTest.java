@@ -41,7 +41,7 @@ class ActivityLogServiceTest {
             repoField.setAccessible(true);
             repoField.set(activityLogService, activityLogRepository);
         } catch (Exception e) {
-            // If reflection fails, tests will use real repository
+            throw new RuntimeException("Failed to inject mock via reflection", e);
         }
         
         testLog = new ActivityLog();

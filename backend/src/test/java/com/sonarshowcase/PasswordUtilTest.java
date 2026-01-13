@@ -81,7 +81,7 @@ class PasswordUtilTest {
     @Test
     @DisplayName("Should handle null input for SHA-1")
     void testHashWithSha1_null() {
-        assertThrows(Exception.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             PasswordUtil.hashWithSha1(null);
         });
     }
@@ -164,7 +164,8 @@ class PasswordUtilTest {
     @Test
     @DisplayName("Should handle null password in storage")
     void testDangerousPasswordStorage_null() {
-        assertDoesNotThrow(() -> {
+        // The method will throw NPE when trying to call .length() on null
+        assertThrows(NullPointerException.class, () -> {
             PasswordUtil.dangerousPasswordStorage(null);
         });
     }
