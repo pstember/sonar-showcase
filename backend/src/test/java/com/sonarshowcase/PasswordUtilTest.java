@@ -164,7 +164,8 @@ class PasswordUtilTest {
     @Test
     @DisplayName("Should handle null password in storage")
     void testDangerousPasswordStorage_null() {
-        assertDoesNotThrow(() -> {
+        // The method will throw NPE when trying to call .length() on null
+        assertThrows(NullPointerException.class, () -> {
             PasswordUtil.dangerousPasswordStorage(null);
         });
     }

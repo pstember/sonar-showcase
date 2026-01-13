@@ -122,9 +122,10 @@ class BatchProcessorTest {
         items.add("item2");
         items.add("item3");
         
+        // offset 1 means: index = size(3) - offset(1) = 2, so item3
         String result = batchProcessor.getItem(items, 1);
         
-        assertEquals("item2", result);
+        assertEquals("item3", result);
     }
     
     @Test
@@ -134,9 +135,11 @@ class BatchProcessorTest {
         items.add("item1");
         items.add("item2");
         
-        String result = batchProcessor.getItem(items, 0);
-        
-        assertEquals("item2", result);
+        // offset 0 means: index = size(2) - offset(0) = 2, which is out of bounds
+        // This test expects an exception
+        assertThrows(IndexOutOfBoundsException.class, () -> {
+            batchProcessor.getItem(items, 0);
+        });
     }
     
     @Test

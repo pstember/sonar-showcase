@@ -56,7 +56,7 @@ class UserServiceTest {
             paymentField.setAccessible(true);
             paymentField.set(userService, paymentService);
         } catch (Exception e) {
-            // If reflection fails, tests will use real services
+            throw new RuntimeException("Failed to inject mocks via reflection", e);
         }
         
         user = new User();

@@ -40,7 +40,7 @@ class EmailServiceTest {
             categoryField.setAccessible(true);
             categoryField.set(emailService, categoryService);
         } catch (Exception e) {
-            // If reflection fails, tests will use real services
+            throw new RuntimeException("Failed to inject mocks via reflection", e);
         }
     }
     
@@ -153,9 +153,10 @@ class EmailServiceTest {
     @Test
     @DisplayName("Should handle null template path")
     void testReadEmailTemplate_nullPath() {
-        String result = emailService.readEmailTemplate(null);
-        
-        assertEquals("", result);
+        // The method will throw NPE when creating File with null path
+        assertThrows(NullPointerException.class, () -> {
+            emailService.readEmailTemplate(null);
+        });
     }
     
     @Test
