@@ -2,25 +2,63 @@ package com.sonarshowcase;
 
 import com.sonarshowcase.model.User;
 import com.sonarshowcase.model.Order;
+import com.sonarshowcase.repository.UserRepository;
+import com.sonarshowcase.service.UserService;
+import com.sonarshowcase.service.OrderService;
+import com.sonarshowcase.service.PaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
- * Comprehensive tests for User model and related operations
+ * Comprehensive tests for User model and UserService
  */
 class UserServiceTest {
 
+    private UserService userService;
     private User user;
-
+    
+    @Mock
+    private UserRepository userRepository;
+    
+    @Mock
+    private OrderService orderService;
+    
+    @Mock
+    private PaymentService paymentService;
+    
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
+        userService = new UserService();
+        
+        // Use reflection to inject mock repositories and services
+        try {
+            java.lang.reflect.Field repoField = UserService.class.getDeclaredField("userRepository");
+            repoField.setAccessible(true);
+            repoField.set(userService, userRepository);
+            
+            java.lang.reflect.Field orderField = UserService.class.getDeclaredField("orderService");
+            orderField.setAccessible(true);
+            orderField.set(userService, orderService);
+            
+            java.lang.reflect.Field paymentField = UserService.class.getDeclaredField("paymentService");
+            paymentField.setAccessible(true);
+            paymentField.set(userService, paymentService);
+        } catch (Exception e) {
+            // If reflection fails, tests will use real services
+        }
+        
         user = new User();
         user.setId(1L);
         user.setUsername("testuser");
@@ -31,6 +69,8 @@ class UserServiceTest {
         user.setCreatedAt(new Date());
         user.setUpdatedAt(new Date());
     }
+    
+    // ==================== User Model Tests ====================
     
     @Test
     @DisplayName("Should create user with valid fields")
@@ -201,6 +241,132 @@ class UserServiceTest {
     void testUser_toString() {
         String result = user.toString();
         assertEquals("User{}", result);
+    }
+    
+    // ==================== UserService Tests ====================
+    
+    @Test
+    @DisplayName("Should get all users")
+    void testGetAllUsers() {
+        List<User> users = new ArrayList<>();
+        users.add(user);
+        when(userRepository.findAll()).thenReturn(users);
+        
+        List<User> result = userService.getAllUsers();
+        
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(userRepository, times(1)).findAll();
+    }
+    
+    @Test
+    @DisplayName("Should get user by ID")
+    void testGetUserById() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        
+        User result = userService.getUserById(1L);
+        
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        verify(userRepository, times(1)).findById(1L);
+    }
+    
+    @Test
+    @DisplayName("Should get user by ID safely")
+    void testGetUserByIdSafe() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        
+        User result = userService.getUserByIdSafe(1L);
+        
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+    }
+    
+    @Test
+    @DisplayName("Should return null when user not found safely")
+    void testGetUserByIdSafe_notFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        
+        User result = userService.getUserByIdSafe(1L);
+        
+        assertNull(result);
+    }
+    
+    @Test
+    @DisplayName("Should create user")
+    void testCreateUser() {
+        when(userRepository.save(user)).thenReturn(user);
+        
+        User result = userService.createUser(user);
+        
+        assertNotNull(result);
+        verify(userRepository, times(1)).save(user);
+    }
+    
+    @Test
+    @DisplayName("Should update user")
+    void testUpdateUser() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        
+        User updateData = new User();
+        updateData.setUsername("updateduser");
+        updateData.setEmail("updated@example.com");
+        
+        User result = userService.updateUser(1L, updateData);
+        
+        assertNotNull(result);
+        verify(userRepository, times(1)).findById(1L);
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+    
+    @Test
+    @DisplayName("Should delete user")
+    void testDeleteUser() {
+        doNothing().when(orderService).deleteOrdersByUser(1L);
+        doNothing().when(userRepository).deleteById(1L);
+        
+        userService.deleteUser(1L);
+        
+        verify(orderService, times(1)).deleteOrdersByUser(1L);
+        verify(userRepository, times(1)).deleteById(1L);
+    }
+    
+    @Test
+    @DisplayName("Should get user summary")
+    void testGetUserSummary() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(orderService.getOrderCountByUser(1L)).thenReturn(5);
+        
+        String summary = userService.getUserSummary(1L);
+        
+        assertNotNull(summary);
+        assertTrue(summary.contains("testuser"));
+        assertTrue(summary.contains("test@example.com"));
+        assertTrue(summary.contains("5"));
+        verify(userRepository, times(1)).findById(1L);
+        verify(orderService, times(1)).getOrderCountByUser(1L);
+    }
+    
+    @Test
+    @DisplayName("Should get user payment info")
+    void testGetUserPaymentInfo() {
+        when(paymentService.getUserPaymentSummary(1L)).thenReturn("Payment info for user: testuser");
+        
+        boolean result = userService.getUserPaymentInfo(1L, "100.00");
+        
+        assertTrue(result);
+        verify(paymentService, times(1)).getUserPaymentSummary(1L);
+    }
+    
+    @Test
+    @DisplayName("Should handle user payment info with null summary")
+    void testGetUserPaymentInfo_nullSummary() {
+        when(paymentService.getUserPaymentSummary(1L)).thenReturn(null);
+        
+        boolean result = userService.getUserPaymentInfo(1L, "100.00");
+        
+        assertFalse(result);
     }
     
     // ==================== Role-based tests ====================
