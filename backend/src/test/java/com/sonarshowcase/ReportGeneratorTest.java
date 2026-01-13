@@ -22,7 +22,8 @@ class ReportGeneratorTest {
     @DisplayName("Should generate report")
     void testGenerateReport() {
         // This will fail if database is not available, but we test exception handling
-        assertThrows(Exception.class, () -> {
+        // The method throws Exception (checked), so we catch it
+        assertThrows(java.sql.SQLException.class, () -> {
             reportGenerator.generateReport("Test Report");
         });
     }
@@ -30,7 +31,8 @@ class ReportGeneratorTest {
     @Test
     @DisplayName("Should handle null report type")
     void testGenerateReport_nullType() {
-        assertThrows(Exception.class, () -> {
+        // The method throws Exception (checked), so we catch it
+        assertThrows(java.sql.SQLException.class, () -> {
             reportGenerator.generateReport(null);
         });
     }

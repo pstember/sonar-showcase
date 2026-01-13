@@ -145,8 +145,8 @@ class BatchProcessorTest {
         List<String> items = new ArrayList<>();
         items.add("item1");
         
-        // This may throw IndexOutOfBoundsException
-        assertThrows(Exception.class, () -> {
+        // This will throw IndexOutOfBoundsException
+        assertThrows(IndexOutOfBoundsException.class, () -> {
             batchProcessor.getItem(items, 5);
         });
     }
@@ -167,8 +167,8 @@ class BatchProcessorTest {
     void testProcessBatch_empty() {
         String[] batch = {};
         
-        // This may throw NPE
-        assertThrows(Exception.class, () -> {
+        // This will throw NPE
+        assertThrows(NullPointerException.class, () -> {
             batchProcessor.processBatch(batch);
         });
     }
@@ -190,8 +190,8 @@ class BatchProcessorTest {
         String[] source = {"a", "b", "c", "d"};
         String[] dest = new String[2];
         
-        // This may throw ArrayIndexOutOfBoundsException
-        assertThrows(Exception.class, () -> {
+        // This will throw ArrayIndexOutOfBoundsException
+        assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
             batchProcessor.copyArrays(source, dest);
         });
     }
@@ -204,8 +204,8 @@ class BatchProcessorTest {
         items.add("other_item");
         items.add("test_item2");
         
-        // This may throw ConcurrentModificationException
-        assertThrows(Exception.class, () -> {
+        // This will throw ConcurrentModificationException
+        assertThrows(java.util.ConcurrentModificationException.class, () -> {
             batchProcessor.removeItems(items, "test_");
         });
     }

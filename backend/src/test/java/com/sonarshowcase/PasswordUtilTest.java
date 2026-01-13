@@ -81,7 +81,7 @@ class PasswordUtilTest {
     @Test
     @DisplayName("Should handle null input for SHA-1")
     void testHashWithSha1_null() {
-        assertThrows(Exception.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             PasswordUtil.hashWithSha1(null);
         });
     }

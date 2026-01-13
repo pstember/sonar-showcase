@@ -102,7 +102,7 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should handle payment with null order")
     void testProcessPayment_nullOrder() {
-        assertThrows(Exception.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             paymentService.processPayment(null, "4111111111111111", "123");
         });
     }
