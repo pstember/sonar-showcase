@@ -48,7 +48,7 @@ describe('App Component', () => {
 
   it('should display the version', () => {
     render(<App />)
-    expect(screen.getByText(/Version: 1.0.0/i)).toBeInTheDocument()
+    expect(screen.getByText(/Version: 1.2.0/i)).toBeInTheDocument()
   })
 
   it('should render header element', () => {
@@ -156,6 +156,6 @@ describe('App Component Layout', () => {
     const header = document.querySelector('header')
     const p = header?.querySelector('p')
     expect(p).toBeInTheDocument()
-    expect(p).toHaveTextContent('Version: 1.0.0')
+    expect(p).toHaveTextContent('Version: 1.2.0')
   })
 })
