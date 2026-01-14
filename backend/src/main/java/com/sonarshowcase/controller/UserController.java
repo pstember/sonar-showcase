@@ -80,7 +80,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(
             @Parameter(description = "User ID", example = "1")
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         // REL: NPE - .get() on Optional without check
         User user = userRepository.findById(id).get();
         return ResponseEntity.ok(user);
@@ -165,7 +165,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(
             @Parameter(description = "User ID to delete", example = "1")
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         // SEC: No authorization - anyone can delete any user
         userRepository.deleteById(id);
         return ResponseEntity.ok("Deleted");
@@ -317,7 +317,7 @@ public class UserController {
     @PutMapping("/{id}/password")
     public ResponseEntity<String> updatePassword(
             @Parameter(description = "User ID", example = "1")
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Parameter(description = "Old password (insecure - sent in URL)", example = "oldpass123")
             @RequestParam String oldPassword,
             @Parameter(description = "New password (insecure - sent in URL, no validation)", example = "newpass123")
@@ -359,7 +359,7 @@ public class UserController {
     @PostMapping("/{id}/reset-token")
     public ResponseEntity<Map<String, String>> generateResetToken(
             @Parameter(description = "User ID", example = "1")
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         
         // REL: NPE risk - .get() on Optional without check
         User user = userRepository.findById(id).get();

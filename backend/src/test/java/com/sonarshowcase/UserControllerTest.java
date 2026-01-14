@@ -127,14 +127,24 @@ class UserControllerTest {
     }
     
     @Test
-    @DisplayName("Should return 500 when user not found (NPE due to .get() on empty Optional)")
-    void testGenerateResetToken_userNotFound() throws Exception {
+    @DisplayName("Should throw exception when user not found (NPE due to .get() on empty Optional)")
+    void testGenerateResetToken_userNotFound() {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
         
-        // This will throw NoSuchElementException which results in 500 error
-        mockMvc.perform(post("/api/v1/users/999/reset-token")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+        // This will throw NoSuchElementException - intentional bug for SonarCloud demo
+        // We verify the exception is thrown as expected
+        jakarta.servlet.ServletException exception = assertThrows(
+            jakarta.servlet.ServletException.class,
+            () -> {
+                mockMvc.perform(post("/api/v1/users/999/reset-token")
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andReturn();
+            }
+        );
+        
+        // Verify the underlying cause is NoSuchElementException
+        assertTrue(exception.getCause() instanceof java.util.NoSuchElementException ||
+                   exception.getMessage().contains("No value present"));
         
         verify(userRepository, times(1)).findById(999L);
     }
