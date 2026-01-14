@@ -61,6 +61,22 @@ PUT /api/v1/users/{id}/password?oldPassword={old}&newPassword={new}
 ```
 ⚠️ **INSECURE:** Passwords in URL parameters, plain text storage
 
+#### Generate Password Reset Token
+```
+POST /api/v1/users/{id}/reset-token
+```
+🔴 **SECURITY:** Uses weak random number generator (java:S5445) - `java.util.Random` is predictable and should not be used for security tokens. Should use `SecureRandom` instead.
+
+**Response:**
+```json
+{
+  "userId": "1",
+  "username": "johndoe",
+  "resetToken": "aB3dEf9gHiJkLmNoPqRsTuVwXyZ1234",
+  "message": "Password reset token generated. Use this token to reset your password."
+}
+```
+
 #### Delete User
 ```
 DELETE /api/v1/users/{id}

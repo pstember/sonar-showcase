@@ -11,58 +11,29 @@
 - [x] Added API documentation section to README
 - [x] Updated all documentation to match codebase
 - [x] Created review findings document
-- [x] Added OpenAPI annotations to controllers (UserController, OrderController, FileController)
+- [x] Added OpenAPI annotations to controllers (UserController, OrderController, FileController, ActivityLogController, HealthController, SpaController)
 - [x] Added Maven plugin configuration for static OpenAPI spec generation
 - [x] Created API reference card (`docs/API_REFERENCE_CARD.md`)
 - [x] Created AI assistant guide (`docs/AI_ASSISTANT_GUIDE.md`)
 - [x] Created documentation setup summary (`docs/DOCUMENTATION_SETUP.md`)
-
-## 🔄 In Progress
-
-- [ ] Test OpenAPI/Swagger documentation generation (requires running application)
-- [ ] Verify all endpoints appear in Swagger UI (requires running application)
+- [x] JavaDoc automatically generated during build
+- [x] TypeDoc automatically generated during build
+- [x] Added security warnings to vulnerable endpoints in documentation
 
 ## 📋 Remaining Tasks
 
-### High Priority
+### Optional Enhancements
 
-1. **Configure SpringDoc OpenAPI**
-   - [x] Add OpenAPI configuration class
-   - [x] Configure API info (title, version, description)
-   - [x] Set up Swagger UI endpoint
-   - [ ] Test documentation generation (requires running app)
-   - [ ] Verify all endpoints are documented (requires running app)
-
-2. **Documentation Generation Setup**
-   - [x] Add Maven plugin to generate static OpenAPI spec
-   - [x] Configure build to generate docs on build
-   - [x] Add documentation to README about accessing Swagger UI
-
-3. **Code Annotations**
-   - [x] Add OpenAPI annotations to all controllers
-   - [x] Add parameter descriptions and examples
-   - [x] Add security warnings to vulnerable endpoints
+1. **Code Annotations**
    - [ ] Add schema descriptions to models (optional enhancement)
-   - [ ] Document request/response examples (optional enhancement)
+   - [ ] Document request/response examples in OpenAPI annotations (optional enhancement)
 
-### Medium Priority
-
-4. **Specification Maintenance**
+2. **Specification Maintenance**
    - [ ] Set up automated validation (if possible)
    - [ ] Create checklist for code changes
    - [ ] Add version control for specification changes
 
-5. **Additional Documentation**
-   - [x] Create JavaDoc generation instructions
-   - [x] Create TypeDoc generation instructions
-   - [x] Configure TypeDoc in frontend
-   - [x] Create API endpoint reference card
-   - [x] JavaDoc automatically generated during build
-   - [x] TypeDoc automatically generated during build
-
-### Low Priority
-
-6. **Documentation Automation**
+3. **Documentation Automation**
    - [ ] Set up CI/CD to generate docs on commit
    - [ ] Host generated documentation
    - [ ] Create documentation site
@@ -73,34 +44,47 @@
 
 ### OpenAPI/Swagger Documentation
 
-Once configured, documentation will be available at:
+Documentation is automatically available when the application is running:
 - **Swagger UI:** `http://localhost:8080/swagger-ui.html`
 - **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
 - **OpenAPI YAML:** `http://localhost:8080/v3/api-docs.yaml`
 
 ### JavaDoc (Backend)
 
+JavaDoc is automatically generated during Maven build:
+```bash
+mvn clean install
+# Output: backend/target/site/apidocs/
+```
+
+Or generate manually:
 ```bash
 cd backend
 mvn javadoc:javadoc
-# Output: target/site/apidocs/
 ```
 
 ### TypeDoc (Frontend)
 
+TypeDoc is automatically generated during Maven build:
+```bash
+mvn clean install
+# Output: frontend/target/site/typedoc/
+```
+
+Or generate manually:
 ```bash
 cd frontend
-npm install --save-dev typedoc
-npx typedoc --out docs/typedoc src/
+npm run docs
 ```
 
 ---
 
-## Next Steps
+## Notes
 
-1. **Immediate:** Test Swagger UI documentation (requires running application)
-2. **Short-term:** Add schema descriptions to models (optional enhancement)
-3. **Long-term:** Set up automated documentation generation in CI/CD
+- All core documentation tasks are complete
+- Swagger UI documentation is automatically generated from code annotations
+- Remaining tasks are optional enhancements for future consideration
+- See `docs/DOCUMENTATION_LOCATIONS.md` for all documentation file locations
 
 ---
 

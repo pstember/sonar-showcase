@@ -240,6 +240,17 @@ All API endpoints are prefixed with `/api/v1`
   - Plain text comparison (intentional security issue)
   - No password strength validation (intentional security issue)
 
+**POST `/api/v1/users/{id}/reset-token`**
+- **Purpose:** Generate password reset token (🔴 security vulnerability)
+- **Path Parameters:** `id` (Long)
+- **Response:** JSON object with `userId`, `username`, `resetToken`, and `message`
+- **Status Codes:** 200 OK, 404 Not Found (if user not found)
+- **Behavior:**
+  - Uses `java.util.Random` instead of `SecureRandom` (intentional security issue - java:S5445)
+  - Generates a 32-character alphanumeric token
+  - Returns token in response (should be sent via secure channel in production)
+  - NPE risk: uses `.get()` on Optional without check (intentional reliability issue)
+
 **DELETE `/api/v1/users/{id}`**
 - **Purpose:** Delete user
 - **Path Parameters:** `id` (Long)
@@ -488,6 +499,7 @@ private String generateOrderNumber() {
 7. **XSS** (dangerouslySetInnerHTML in frontend)
 8. **JWT in localStorage** (frontend)
 9. **CORS Wildcard** (WebConfig)
+10. **Weak Random Number Generator** (java:S5445) - Password reset token generation uses `java.util.Random` instead of `SecureRandom`
 
 These are **REQUIRED** for SonarCloud demonstration purposes.
 

@@ -29,6 +29,7 @@ http://localhost:8080/api/v1
 | GET | `/users/search?q={query}` | Search users | Safe (in-memory) |
 | POST | `/users` | Create user | ⚠️ No validation |
 | PUT | `/users/{id}/password?old={old}&new={new}` | Update password | ⚠️ Insecure |
+| POST | `/users/{id}/reset-token` | Generate password reset token | 🔴 Weak random generator (java:S5445) |
 | DELETE | `/users/{id}` | Delete user | ⚠️ No authorization |
 
 ### Orders

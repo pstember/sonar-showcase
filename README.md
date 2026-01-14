@@ -268,6 +268,7 @@ This project uses a **hybrid configuration approach** for SonarQube scanning:
 | GET | `/api/v1/users/search?q={query}` | Search users (in-memory search) |
 | POST | `/api/v1/users` | Create user |
 | PUT | `/api/v1/users/{id}/password` | Update password (⚠️ insecure) |
+| POST | `/api/v1/users/{id}/reset-token` | Generate password reset token (🔴 weak random generator) |
 | DELETE | `/api/v1/users/{id}` | Delete user |
 | GET | `/api/v1/orders` | Get all orders |
 | GET | `/api/v1/orders/{id}` | Get order by ID |
@@ -349,6 +350,7 @@ The `malicious-attic` module contains intentionally malicious npm packages for d
 - Hardcoded credentials throughout (PaymentService, DatabaseConfig)
 - XSS via dangerouslySetInnerHTML (CommentDisplay.tsx)
 - Weak cryptography using MD5 (PasswordUtil)
+- Weak random number generator (java:S5445) - Password reset token uses `java.util.Random` instead of `SecureRandom` (UserController)
 - CORS wildcard configuration (WebConfig)
 - JWT stored in localStorage (api.ts)
 

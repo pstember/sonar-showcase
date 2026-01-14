@@ -20,6 +20,8 @@ import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * User controller with layer bypass and other issues
@@ -78,7 +80,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(
             @Parameter(description = "User ID", example = "1")
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         // REL: NPE - .get() on Optional without check
         User user = userRepository.findById(id).get();
         return ResponseEntity.ok(user);
@@ -163,7 +165,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(
             @Parameter(description = "User ID to delete", example = "1")
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         // SEC: No authorization - anyone can delete any user
         userRepository.deleteById(id);
         return ResponseEntity.ok("Deleted");
@@ -315,7 +317,7 @@ public class UserController {
     @PutMapping("/{id}/password")
     public ResponseEntity<String> updatePassword(
             @Parameter(description = "User ID", example = "1")
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Parameter(description = "Old password (insecure - sent in URL)", example = "oldpass123")
             @RequestParam String oldPassword,
             @Parameter(description = "New password (insecure - sent in URL, no validation)", example = "newpass123")
@@ -335,6 +337,51 @@ public class UserController {
         userRepository.save(user);
         
         return ResponseEntity.ok("Password updated");
+    }
+    
+    /**
+     * Generate password reset token for a user
+     * 
+     * SEC: Uses weak random number generator (java:S5445)
+     * Should use SecureRandom instead of Random for security-sensitive operations
+     * 
+     * @param id The user ID
+     * @return ResponseEntity containing the reset token
+     */
+    @Operation(
+        summary = "Generate password reset token", 
+        description = "Generates a password reset token for the specified user. " +
+                     "⚠️ SECURITY: Uses weak random number generator (java:S5445) - " +
+                     "java.util.Random is predictable and should not be used for security tokens"
+    )
+    @ApiResponse(responseCode = "200", description = "Reset token generated")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    @PostMapping("/{id}/reset-token")
+    public ResponseEntity<Map<String, String>> generateResetToken(
+            @Parameter(description = "User ID", example = "1")
+            @PathVariable("id") Long id) {
+        
+        // REL: NPE risk - .get() on Optional without check
+        User user = userRepository.findById(id).get();
+        
+        // SEC: java:S5445 - Using java.util.Random instead of SecureRandom
+        // Random is predictable and should not be used for security-sensitive operations
+        java.util.Random random = new java.util.Random();
+        
+        // Generate a 32-character alphanumeric token
+        StringBuilder token = new StringBuilder();
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (int i = 0; i < 32; i++) {
+            token.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("userId", String.valueOf(user.getId()));
+        response.put("username", user.getUsername());
+        response.put("resetToken", token.toString());
+        response.put("message", "Password reset token generated. Use this token to reset your password.");
+        
+        return ResponseEntity.ok(response);
     }
 }
 
