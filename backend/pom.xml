@@ -71,6 +71,26 @@
             <version>2.3.0</version>
         </dependency>
 
+        <!-- VULNERABLE: Third-party dependencies for notification system demo -->
+        <!-- CVE-2020-13956: HTTP header injection vulnerability -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.6</version>
+        </dependency>
+        <!-- CVE-2020-25649: Deserialization of untrusted data -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.10</version>
+        </dependency>
+        <!-- CVE-2015-6420: Unsafe deserialization -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.0</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
