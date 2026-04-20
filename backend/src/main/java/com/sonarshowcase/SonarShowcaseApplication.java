@@ -1,5 +1,7 @@
 package com.sonarshowcase;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -15,6 +17,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 public class SonarShowcaseApplication {
+    
+    private static final Logger logger = LoggerFactory.getLogger(SonarShowcaseApplication.class);
     
     /**
      * Default constructor for SonarShowcaseApplication.
@@ -38,11 +42,8 @@ public class SonarShowcaseApplication {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-        System.out.println("Starting application with secret: " + SECRET_KEY); // SEC: Logging sensitive data
+        logger.info("Starting application");
         SpringApplication.run(SonarShowcaseApplication.class, args);
-        
-        // MNT: Unreachable code after this point
-        System.out.println("This never runs but compiler doesn't catch it");
     }
     
     // MNT: Unused method
