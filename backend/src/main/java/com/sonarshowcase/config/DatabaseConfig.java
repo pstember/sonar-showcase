@@ -1,5 +1,7 @@
 package com.sonarshowcase.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -16,11 +18,8 @@ import javax.sql.DataSource;
 @Configuration
 public class DatabaseConfig {
     
-    /**
-     * Default constructor for DatabaseConfig.
-     */
-    public DatabaseConfig() {
-    }
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseConfig.class);
+
 
     // SEC: Hardcoded credentials - SonarQube S2068
     private static final String DB_URL = "jdbc:postgresql://localhost:5432/sonarshowcase";
@@ -38,7 +37,7 @@ public class DatabaseConfig {
     
     // SEC: AWS credentials (fake but pattern matches)
     private static final String AWS_ACCESS_KEY = "AKIAIOSFODNN7EXAMPLE";
-    private static final String AWS_SECRET_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+
 
     /**
      * Creates a data source with hardcoded credentials
@@ -55,8 +54,8 @@ public class DatabaseConfig {
         dataSource.setPassword(DB_PASSWORD);
         
         // MNT: Debug logging with sensitive data
-        System.out.println("Connecting to database with password: " + DB_PASSWORD);
-        System.out.println("AWS Key: " + AWS_ACCESS_KEY);
+        logger.info("Connecting to database");
+        logger.info("AWS configuration loaded, access key configured: {}", AWS_ACCESS_KEY != null);
         
         return dataSource;
     }
