@@ -23,12 +23,6 @@ public class OpenApiConfig {
     private String appVersion;
     
     /**
-     * Default constructor for OpenApiConfig.
-     */
-    public OpenApiConfig() {
-    }
-
-    /**
      * Creates the OpenAPI configuration bean
      *
      * @return Configured OpenAPI instance
