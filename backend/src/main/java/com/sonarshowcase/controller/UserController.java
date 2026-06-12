@@ -79,8 +79,8 @@ public class UserController {
     public ResponseEntity<User> getUserById(
             @Parameter(description = "User ID", example = "1")
             @PathVariable Long id) {
-        // REL: NPE - .get() on Optional without check
-        User user = userRepository.findById(id).get();
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
         return ResponseEntity.ok(user);
     }
     
@@ -322,7 +322,8 @@ public class UserController {
             @RequestParam String newPassword) {
         
         // SEC: Password in URL parameters (logged in access logs)
-        User user = userRepository.findById(id).get();
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
         
         // SEC: Plain text password comparison
         if (!user.getPassword().equals(oldPassword)) {
@@ -479,7 +480,8 @@ public class UserController {
         // SEC-CSRF: Dangerous state-changing operation via GET
         // SEC-CSRF: No CSRF token validation
         // SEC-CSRF: No confirmation required
-        User user = userRepository.findById(id).get();
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
         userRepository.delete(user);
 
         return ResponseEntity.ok("Account " + id + " deleted successfully");
@@ -506,7 +508,8 @@ public class UserController {
             @PathVariable Long id) {
         // SEC-CSRF: Critical operation via GET with no CSRF protection
         // SEC-BAC: No authorization check - any user can promote anyone
-        User user = userRepository.findById(id).get();
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
         user.setRole("ADMIN");
         userRepository.save(user);
 
@@ -568,7 +571,8 @@ public class UserController {
             @RequestParam String newEmail) {
         // SEC-BAC: No authorization check
         // SEC-BAC: User A can modify User B's email
-        User user = userRepository.findById(userId).get();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         user.setEmail(newEmail);
         userRepository.save(user);
 
@@ -595,7 +599,8 @@ public class UserController {
             @PathVariable Long userId) {
         // SEC-BAC: No authorization check
         // SEC-BAC: Regular users can deactivate admin accounts
-        User user = userRepository.findById(userId).get();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         user.setActive(false);
         userRepository.save(user);
 
@@ -622,7 +627,8 @@ public class UserController {
             @PathVariable Long userId) {
         // SEC-BAC + IDOR: No authorization check
         // SEC: Exposing PII without protection
-        User user = userRepository.findById(userId).get();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
         String data = "SENSITIVE DATA FOR USER: " + user.getUsername() + "\n" +
                      "SSN: " + user.getSsn() + "\n" +

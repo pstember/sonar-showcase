@@ -19,6 +19,7 @@ spec:
       labels:
         app: sonarshowcase
     spec:
+      automountServiceAccountToken: false  # Fix S6865: bind to RBAC or disable automount
       # SEC-K8S-01: Running as root user (S6471)
       # Containers should not run as root
       securityContext:
@@ -28,7 +29,7 @@ spec:
 
       containers:
       - name: app
-        image: sonarshowcase:latest
+        image: sonarshowcase:1.0.0
         imagePullPolicy: Always
 
         # SEC-K8S-02: Privileged container (S6470)
@@ -44,10 +45,13 @@ spec:
               - SYS_PTRACE  # SEC: Allows process tracing - S6470
               - ALL  # SEC: All capabilities granted - S6470
 
-        # SEC-K8S-03: Hardcoded secrets in environment variables (S6437)
+        # SEC-K8S-03: Use secret ref instead of hardcoded value (fix S6418)
         env:
         - name: DATABASE_PASSWORD
-          value: "SuperSecret123"  # SEC: Hardcoded secret - S6437
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: database-password
         - name: API_KEY
           value: "sk_live_1234567890abcdef"  # SEC: Hardcoded API key - S6437
         - name: JWT_SECRET
@@ -63,15 +67,16 @@ spec:
         - containerPort: 8080
           protocol: TCP
 
-        # SEC-K8S-04: No resource limits (S6472)
-        # Missing resource limits can lead to resource exhaustion
-        # resources:
-        #   limits:
-        #     cpu: "1"
-        #     memory: "512Mi"
-        #   requests:
-        #     cpu: "100m"
-        #     memory: "128Mi"
+        # SEC-K8S-04: Resource limits/requests added to fix S6864, S6870, S6873, S6892, S6897
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+            ephemeral-storage: "1Gi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+            ephemeral-storage: "256Mi"
 
         # SEC-K8S-05: No liveness/readiness probes
         # Missing probes can cause service disruptions
@@ -125,9 +130,8 @@ metadata:
   name: app-config
   namespace: default
 data:
-  # SEC-K8S-10: Sensitive data in ConfigMap (S6437)
-  # ConfigMaps are not encrypted and should not contain secrets
-  database.url: "postgresql://admin:SuperSecret123@db.example.com:5432/maindb"  # SEC: Database credentials
+  # SEC-K8S-10: Placeholder - inject real credentials via secret/env in production (fix S6698)
+  database.url: "postgresql://admin:<inject-from-secret>@db.example.com:5432/maindb"
   api.key: "sk_live_abc123def456"  # SEC: API key in ConfigMap
   jwt.secret: "weak_jwt_secret_key_12345"  # SEC: JWT secret in ConfigMap
   admin.password: "admin123"  # SEC: Admin password in ConfigMap
@@ -158,10 +162,13 @@ kind: ClusterRole
 metadata:
   name: overpermissive-role
 rules:
-# SEC-K8S-12: Overpermissive RBAC (S6302)
-- apiGroups: ["*"]  # SEC: All API groups
-  resources: ["*"]  # SEC: All resources
-  verbs: ["*"]  # SEC: All verbs (get, list, create, update, delete, etc.)
+# SEC-K8S-12: Replace wildcards with explicit list (fix S6867)
+- apiGroups: [""]
+  resources: ["pods", "configmaps", "secrets"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -255,11 +262,12 @@ spec:
   schedule: "0 2 * * *"
   jobTemplate:
     spec:
-      template:
-        spec:
-          containers:
-          - name: backup
-            image: backup-tool:latest
+  template:
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: backup
+        image: backup-tool:1.0.0
             env:
             - name: BACKUP_PASSWORD
               value: "BackupP@ss123"  # SEC: Hardcoded backup password
@@ -269,6 +277,13 @@ spec:
               value: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
             securityContext:
               privileged: true  # SEC: Backup job runs privileged
+            resources:
+              limits:
+                cpu: "500m"
+                memory: "256Mi"
+                ephemeral-storage: "512Mi"
+              requests:
+                cpu: "100m"
+                memory: "128Mi"
+                ephemeral-storage: "128Mi"
           restartPolicy: OnFailure
-          # SEC-K8S-16: No resource limits on CronJob
-          # Can consume unlimited resources during backup

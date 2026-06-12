@@ -194,5 +194,24 @@ public class OrderService {
         // MNT: No validation or ownership check
         return orderRepository.save(order);
     }
+
+    /**
+     * Builds invoice string for an order (used by controller to avoid controller->User dependency).
+     *
+     * @param orderId Order ID
+     * @return Invoice string
+     */
+    public String getInvoiceForOrder(Long orderId) {
+        Order order = getOrderById(orderId);
+        User user = order.getUser();
+        return "INVOICE\n" +
+                "Order ID: " + order.getId() + "\n" +
+                "Order Number: " + order.getOrderNumber() + "\n" +
+                "User ID: " + (user != null ? user.getId() : "N/A") + "\n" +
+                "User Email: " + (user != null ? user.getEmail() : "N/A") + "\n" +
+                "Total Amount: $" + order.getTotalAmount() + "\n" +
+                "Status: " + order.getStatus() + "\n" +
+                "Shipping Address: " + order.getShippingAddress();
+    }
 }
 

@@ -186,19 +186,8 @@ public class OrderController {
             @Parameter(description = "Order ID", example = "1")
             @PathVariable Long orderId) {
         // SEC-IDOR: No ownership verification
-        Order order = orderService.getOrderById(orderId);
-
-        // SEC: Exposing sensitive financial details
-        String invoice = "INVOICE\n" +
-                        "Order ID: " + order.getId() + "\n" +
-                        "Order Number: " + order.getOrderNumber() + "\n" +
-                        "User ID: " + order.getUser().getId() + "\n" +
-                        "User Email: " + order.getUser().getEmail() + "\n" +
-                        "Total Amount: $" + order.getTotalAmount() + "\n" +
-                        "Status: " + order.getStatus() + "\n" +
-                        "Shipping Address: " + order.getShippingAddress();
-
-        return ResponseEntity.ok(invoice);
+        // Invoice built in service to avoid controller->User architecture dependency
+        return ResponseEntity.ok(orderService.getInvoiceForOrder(orderId));
     }
 
     /**

@@ -12,6 +12,18 @@ terraform {
   }
 }
 
+variable "admin_cidr" {
+  description = "CIDR block for admin access (restrict SSH/RDP in production)"
+  type        = string
+  default     = ""
+}
+
+variable "db_password" {
+  description = "Database password - set via TF_VAR_db_password or -var, never commit"
+  type        = string
+  sensitive   = true
+}
+
 # SEC-IAC-01: Hardcoded AWS credentials (S6329)
 # Credentials should NEVER be hardcoded in Terraform files
 provider "aws" {
@@ -51,30 +63,29 @@ resource "aws_security_group" "overpermissive_sg" {
   vpc_id      = aws_vpc.main.id
 
   # SEC: Allows SSH from anywhere (0.0.0.0/0)
+  # Restrict to admin CIDR in production (fix S6321)
   ingress {
-    description = "SSH from anywhere"
+    description = "SSH from restricted IPs"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # SEC: Should be restricted - S6319
+    cidr_blocks = [var.admin_cidr != "" ? var.admin_cidr : "10.0.0.0/8"]
   }
 
-  # SEC: Allows RDP from anywhere
   ingress {
-    description = "RDP from anywhere"
+    description = "RDP from restricted IPs"
     from_port   = 3389
     to_port     = 3389
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # SEC: Extremely dangerous - S6319
+    cidr_blocks = [var.admin_cidr != "" ? var.admin_cidr : "10.0.0.0/8"]
   }
 
-  # SEC: Allows all ports from anywhere
   ingress {
-    description = "All ports open"
+    description = "All ports open - restrict in production"
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # SEC: Complete exposure - S6319
+    cidr_blocks = [var.admin_cidr != "" ? var.admin_cidr : "10.0.0.0/8"]
   }
 
   # SEC: Allows all outbound traffic
@@ -94,7 +105,7 @@ resource "aws_db_instance" "unencrypted_db" {
   instance_class       = "db.t3.micro"
   allocated_storage    = 20
   username             = "admin"           # SEC: Default username
-  password             = "SuperSecret123"  # SEC: Hardcoded password - S6329
+  password             = var.db_password    # Use variable, never commit real password (fix S6698)
   publicly_accessible  = true             # SEC: Database publicly accessible - S6329
   storage_encrypted    = false            # SEC: No encryption at rest - S6308
   skip_final_snapshot  = true             # SEC: No backup on deletion
