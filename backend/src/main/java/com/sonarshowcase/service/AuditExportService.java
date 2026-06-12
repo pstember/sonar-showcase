@@ -10,6 +10,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +45,7 @@ public class AuditExportService {
             Instant from,
             Instant to,
             Pageable pageable) {
-        Pageable bounded = boundPageable(pageable);
+        Pageable bounded = boundPageable(pageable, Sort.by(Sort.Direction.DESC, "timestamp"));
         Specification<ActivityLog> spec = activityLogSpec(userId, action, from, to);
         return activityLogRepository.findAll(spec, bounded).map(this::toActivityLogDto);
     }
@@ -60,21 +61,21 @@ public class AuditExportService {
             Instant from,
             Instant to,
             Pageable pageable) {
-        Pageable bounded = boundPageable(pageable);
+        Pageable bounded = boundPageable(pageable, Sort.by(Sort.Direction.DESC, "orderDate"));
         Specification<Order> spec = orderSpec(userId, status, from, to);
         return orderRepository.findAll(spec, bounded).map(this::toOrderDto);
     }
 
-    private static Pageable boundPageable(Pageable pageable) {
+    private static Pageable boundPageable(Pageable pageable, Sort defaultSort) {
         int size = pageable.getPageSize();
-        // Default sort: timestamp DESC (activity logs) / orderDate DESC (orders)
         if (size > MAX_PAGE_SIZE) {
             size = MAX_PAGE_SIZE;
         }
         if (size < 1) {
             size = 20;
         }
-        return PageRequest.of(pageable.getPageNumber(), size, pageable.getSort());
+        Sort sort = pageable.getSort().isSorted() ? pageable.getSort() : defaultSort;
+        return PageRequest.of(pageable.getPageNumber(), size, sort);
     }
 
     private static Specification<ActivityLog> activityLogSpec(Long userId, String action, Instant from, Instant to) {
