@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,11 +32,13 @@ import java.time.Instant;
 @Tag(name = "Audit export", description = "Paginated audit views for activity logs and orders. Requires X-Admin-Key (see audit.admin-key).")
 public class AuditExportController {
 
-    @Autowired
-    private AuditExportService auditExportService;
+    private final AuditExportService auditExportService;
+    private final AuditAccessVerifier auditAccessVerifier;
 
-    @Autowired
-    private AuditAccessVerifier auditAccessVerifier;
+    public AuditExportController(AuditExportService auditExportService, AuditAccessVerifier auditAccessVerifier) {
+        this.auditExportService = auditExportService;
+        this.auditAccessVerifier = auditAccessVerifier;
+    }
 
     @Operation(
             summary = "Export activity logs (paginated)",
