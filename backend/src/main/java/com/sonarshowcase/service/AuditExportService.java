@@ -25,6 +25,8 @@ import java.util.List;
 public class AuditExportService {
 
     public static final int MAX_PAGE_SIZE = 100;
+    private static final String ORDER_DATE = "orderDate";
+    private static final String TIMESTAMP = "timestamp";
 
     private final ActivityLogRepository activityLogRepository;
     private final OrderRepository orderRepository;
@@ -45,7 +47,7 @@ public class AuditExportService {
             Instant from,
             Instant to,
             Pageable pageable) {
-        Pageable bounded = boundPageable(pageable, Sort.by(Sort.Direction.DESC, "timestamp"));
+        Pageable bounded = boundPageable(pageable, Sort.by(Sort.Direction.DESC, TIMESTAMP));
         Specification<ActivityLog> spec = activityLogSpec(userId, action, from, to);
         return activityLogRepository.findAll(spec, bounded).map(this::toActivityLogDto);
     }
@@ -61,7 +63,7 @@ public class AuditExportService {
             Instant from,
             Instant to,
             Pageable pageable) {
-        Pageable bounded = boundPageable(pageable, Sort.by(Sort.Direction.DESC, "orderDate"));
+        Pageable bounded = boundPageable(pageable, Sort.by(Sort.Direction.DESC, ORDER_DATE));
         Specification<Order> spec = orderSpec(userId, status, from, to);
         return orderRepository.findAll(spec, bounded).map(this::toOrderDto);
     }
@@ -88,10 +90,10 @@ public class AuditExportService {
                 predicates.add(cb.equal(root.get("action"), action));
             }
             if (from != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("timestamp"), from));
+                predicates.add(cb.greaterThanOrEqualTo(root.get(TIMESTAMP), from));
             }
             if (to != null) {
-                predicates.add(cb.lessThan(root.get("timestamp"), to));
+                predicates.add(cb.lessThan(root.get(TIMESTAMP), to));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
@@ -107,10 +109,10 @@ public class AuditExportService {
                 predicates.add(cb.equal(root.get("status"), status));
             }
             if (from != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("orderDate"), from));
+                predicates.add(cb.greaterThanOrEqualTo(root.get(ORDER_DATE), from));
             }
             if (to != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("orderDate"), to));
+                predicates.add(cb.lessThanOrEqualTo(root.get(ORDER_DATE), to));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
