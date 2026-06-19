@@ -1,5 +1,8 @@
 package com.sonarshowcase.service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -25,7 +28,9 @@ public class AuditAccessVerifier {
         if (expectedKey == null || expectedKey.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Audit admin key is not configured");
         }
-        if (providedKey == null || !expectedKey.equals(providedKey)) {
+        if (providedKey == null || !MessageDigest.isEqual(
+                expectedKey.getBytes(StandardCharsets.UTF_8),
+                providedKey.getBytes(StandardCharsets.UTF_8))) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing X-Admin-Key");
         }
     }
