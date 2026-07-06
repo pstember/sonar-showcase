@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.regex.Pattern;
 
 /**
  * System controller with Command Injection vulnerability.
@@ -21,6 +22,8 @@ import java.io.InputStreamReader;
 @RequestMapping("/api/v1/system")
 @Tag(name = "System", description = "System operations API endpoints. ⚠️ Contains intentional Command Injection vulnerabilities for demonstration.")
 public class SystemController {
+
+    private static final Pattern VALID_HOST_PATTERN = Pattern.compile("^[a-zA-Z0-9.\\-]+$");
 
     /**
      * Default constructor for SystemController.
@@ -50,13 +53,16 @@ public class SystemController {
     @ApiResponse(responseCode = "500", description = "Command execution error")
     @GetMapping("/ping")
     public ResponseEntity<String> ping(
-            @Parameter(description = "Host to ping (vulnerable to command injection)",
+            @Parameter(description = "Host to ping",
                       example = "google.com")
             @RequestParam String host) {
         try {
-            // SEC: Direct concatenation of user input into shell command!
-            // SHOULD USE: ProcessBuilder with arguments array, or sanitize input
-            String command = "ping -c 4 " + host;
+            if (!VALID_HOST_PATTERN.matcher(host).matches()) {
+                return ResponseEntity.badRequest()
+                        .body("Invalid host: only alphanumeric characters, dots, and hyphens are allowed.");
+            }
+
+            String[] command = new String[]{"/usr/bin/ping", "-c", "4", host};
 
             Process process = Runtime.getRuntime().exec(command);
 
