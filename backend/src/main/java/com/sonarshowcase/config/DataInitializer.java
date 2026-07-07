@@ -5,6 +5,8 @@ import com.sonarshowcase.model.Product;
 import com.sonarshowcase.model.ActivityLog;
 import com.sonarshowcase.repository.UserRepository;
 import com.sonarshowcase.repository.ActivityLogRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -23,18 +25,16 @@ import java.util.Calendar;
 @Component
 public class DataInitializer implements CommandLineRunner {
     
-    /**
-     * Default constructor for DataInitializer.
-     */
-    public DataInitializer() {
-    }
-
-    // MNT: Field injection instead of constructor injection
-    @Autowired
-    private UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
     
+    private final UserRepository userRepository;
+    private final ActivityLogRepository activityLogRepository;
+
     @Autowired
-    private ActivityLogRepository activityLogRepository;
+    public DataInitializer(UserRepository userRepository, ActivityLogRepository activityLogRepository) {
+        this.userRepository = userRepository;
+        this.activityLogRepository = activityLogRepository;
+    }
     
     // SEC: Hardcoded default passwords
     private static final String DEFAULT_PASSWORD = "password123";
@@ -43,11 +43,11 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // MNT: Console output instead of proper logging
-        System.out.println("=== Initializing Sample Data ===");
+        logger.info("=== Initializing Sample Data ===");
         
         // Check if data already exists
         if (userRepository.count() > 0) {
-            System.out.println("Data already exists, skipping initialization");
+            logger.info("Data already exists, skipping initialization");
             return;
         }
         
@@ -57,7 +57,7 @@ public class DataInitializer implements CommandLineRunner {
         // Create sample activity logs
         createSampleActivityLogs();
         
-        System.out.println("=== Sample Data Initialized ===");
+        logger.info("=== Sample Data Initialized ===");
     }
     
     private void createSampleUsers() {
@@ -70,7 +70,7 @@ public class DataInitializer implements CommandLineRunner {
         admin.setActive(true);
         admin.setCreatedAt(new Date());
         userRepository.save(admin);
-        System.out.println("Created admin user with password: " + ADMIN_PASSWORD);
+        logger.info("Created admin user with password: {}", ADMIN_PASSWORD);
         
         // MNT: Duplicated code pattern
         User user1 = new User();
@@ -101,7 +101,7 @@ public class DataInitializer implements CommandLineRunner {
         userRepository.save(user3);
         
         // MNT: Magic number
-        System.out.println("Created 4 sample users");
+        logger.info("Created 4 sample users");
     }
     
     private void createSampleActivityLogs() {
@@ -111,7 +111,7 @@ public class DataInitializer implements CommandLineRunner {
         User user2 = userRepository.findByUsername("jane.smith").orElse(null);
         
         if (admin == null || user1 == null || user2 == null) {
-            System.out.println("Users not found, skipping activity log creation");
+            logger.info("Users not found, skipping activity log creation");
             return;
         }
         
@@ -169,7 +169,7 @@ public class DataInitializer implements CommandLineRunner {
         log5.setIpAddress("192.168.1.101");
         activityLogRepository.save(log5);
         
-        System.out.println("Created 5 sample activity logs");
+        logger.info("Created 5 sample activity logs");
     }
 }
 
