@@ -5,11 +5,11 @@ import com.sonarshowcase.model.Product;
 import com.sonarshowcase.model.ActivityLog;
 import com.sonarshowcase.repository.UserRepository;
 import com.sonarshowcase.repository.ActivityLogRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Calendar;
 
@@ -20,6 +20,7 @@ import java.util.Calendar;
  * 
  * @author SonarShowcase
  */
+@Slf4j
 @Component
 public class DataInitializer implements CommandLineRunner {
     
@@ -43,11 +44,11 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // MNT: Console output instead of proper logging
-        System.out.println("=== Initializing Sample Data ===");
+        log.info("=== Initializing Sample Data ===");
         
         // Check if data already exists
         if (userRepository.count() > 0) {
-            System.out.println("Data already exists, skipping initialization");
+            log.info("Data already exists, skipping initialization");
             return;
         }
         
@@ -57,7 +58,7 @@ public class DataInitializer implements CommandLineRunner {
         // Create sample activity logs
         createSampleActivityLogs();
         
-        System.out.println("=== Sample Data Initialized ===");
+        log.info("=== Sample Data Initialized ===");
     }
     
     private void createSampleUsers() {
@@ -70,7 +71,7 @@ public class DataInitializer implements CommandLineRunner {
         admin.setActive(true);
         admin.setCreatedAt(new Date());
         userRepository.save(admin);
-        System.out.println("Created admin user with password: " + ADMIN_PASSWORD);
+        log.info("Created admin user with password: " + ADMIN_PASSWORD);
         
         // MNT: Duplicated code pattern
         User user1 = new User();
@@ -101,7 +102,7 @@ public class DataInitializer implements CommandLineRunner {
         userRepository.save(user3);
         
         // MNT: Magic number
-        System.out.println("Created 4 sample users");
+        log.info("Created 4 sample users");
     }
     
     private void createSampleActivityLogs() {
@@ -111,7 +112,7 @@ public class DataInitializer implements CommandLineRunner {
         User user2 = userRepository.findByUsername("jane.smith").orElse(null);
         
         if (admin == null || user1 == null || user2 == null) {
-            System.out.println("Users not found, skipping activity log creation");
+            log.info("Users not found, skipping activity log creation");
             return;
         }
         
@@ -169,7 +170,7 @@ public class DataInitializer implements CommandLineRunner {
         log5.setIpAddress("192.168.1.101");
         activityLogRepository.save(log5);
         
-        System.out.println("Created 5 sample activity logs");
+        log.info("Created 5 sample activity logs");
     }
 }
 
