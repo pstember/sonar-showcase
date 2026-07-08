@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.util.Base64;
+import java.util.List;
 
 /**
  * Data import controller with Insecure Deserialization vulnerability.
@@ -39,36 +40,54 @@ public class DataImportController {
      * @return Deserialized object information
      */
     @Operation(
-        summary = "Import serialized data (VULNERABLE)",
-        description = "🔴 INSECURE DESERIALIZATION VULNERABILITY - Deserializes untrusted user input. " +
-                     "This can lead to Remote Code Execution if attacker provides malicious serialized objects. " +
-                     "Attack: Use ysoserial to generate gadget chains that execute arbitrary code during deserialization."
+        summary = "Import serialized data",
+        description = "Deserializes Base64-encoded serialized data with class allowlist validation."
     )
     @ApiResponse(responseCode = "200", description = "Object deserialized")
     @ApiResponse(responseCode = "400", description = "Deserialization error")
     @PostMapping("/import")
     public ResponseEntity<String> importData(
-            @Parameter(description = "Base64-encoded serialized object (vulnerable to deserialization attacks)")
+            @Parameter(description = "Base64-encoded serialized object")
             @RequestBody String data) {
         try {
-            // SEC: Deserializing untrusted data - CRITICAL RCE vulnerability!
-            // SHOULD USE: JSON/XML instead of Java serialization, or validate input
-
             byte[] decodedData = Base64.getDecoder().decode(data);
             ByteArrayInputStream bis = new ByteArrayInputStream(decodedData);
-            ObjectInputStream ois = new ObjectInputStream(bis);
+            ObjectInputStream ois = new SafeObjectInputStream(bis);
 
-            // VULNERABLE: readObject() can trigger malicious code execution
             Object obj = ois.readObject();
 
             ois.close();
 
             return ResponseEntity.ok("Data imported: " + obj.getClass().getName());
 
-        } catch (Exception e) {
-            // SEC: Exposing error details
+        } catch (InvalidClassException e) {
             return ResponseEntity.badRequest()
-                    .body("Deserialization error: " + e.getMessage());
+                    .body("Deserialization error: unauthorized class");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body("Deserialization error");
+        }
+    }
+
+    /**
+     * A safe ObjectInputStream that only allows deserialization of pre-approved classes.
+     */
+    private static class SafeObjectInputStream extends ObjectInputStream {
+
+        private static final List<String> APPROVED_CLASSES = List.of(
+                String.class.getName()
+        );
+
+        SafeObjectInputStream(InputStream in) throws IOException {
+            super(in);
+        }
+
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass osc) throws IOException, ClassNotFoundException {
+            if (!APPROVED_CLASSES.contains(osc.getName())) {
+                throw new InvalidClassException("Unauthorized deserialization", osc.getName());
+            }
+            return super.resolveClass(osc);
         }
     }
 
