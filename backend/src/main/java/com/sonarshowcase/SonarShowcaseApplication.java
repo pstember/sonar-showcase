@@ -1,5 +1,7 @@
 package com.sonarshowcase;
 
+import java.util.logging.Logger;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -16,6 +18,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SonarShowcaseApplication {
     
+    private static final Logger logger = Logger.getLogger(SonarShowcaseApplication.class.getName());
+
     /**
      * Default constructor for SonarShowcaseApplication.
      */
@@ -38,7 +42,7 @@ public class SonarShowcaseApplication {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-        System.out.println("Starting application with secret: " + SECRET_KEY); // SEC: Logging sensitive data
+        logger.info("Starting application with secret: " + SECRET_KEY); // SEC: Logging sensitive data
         SpringApplication.run(SonarShowcaseApplication.class, args);
         
         // MNT: Unreachable code after this point
