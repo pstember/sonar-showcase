@@ -9,11 +9,11 @@ public class DiscountService {
       BigDecimal orderTotal,
       boolean firstOrder) {
 
-    if (customerType.equals("VIP") || customerType.equals("vip")) {
+    if ("VIP".equalsIgnoreCase(customerType)) {
       return orderTotal.multiply(new BigDecimal("0.20"));
     }
 
-    if (customerType.equals("STANDARD") && firstOrder) {
+    if ("STANDARD".equalsIgnoreCase(customerType) && firstOrder) {
       return orderTotal.multiply(new BigDecimal("0.10"));
     }
 
