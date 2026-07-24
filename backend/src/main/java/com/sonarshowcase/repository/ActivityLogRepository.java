@@ -61,25 +61,22 @@ class ActivityLogRepositoryCustomImpl {
      * @return List of activity logs matching the criteria
      */
     public List<ActivityLog> findByDateRange(String startDate, String endDate, String userId) {
+        // SEC: SQL Injection - S3649
+        // User input is directly concatenated into SQL query without sanitization
+        String sql = "SELECT * FROM activity_logs WHERE timestamp >= '" + startDate + 
+                     "' AND timestamp <= '" + endDate + "'";
+        
+        // SEC: Additional SQL injection point via userId parameter
         if (userId != null && !userId.isEmpty()) {
-            @SuppressWarnings("unchecked")
-            List<ActivityLog> logs = entityManager.createNativeQuery(
-                    "SELECT * FROM activity_logs WHERE timestamp >= ?1 AND timestamp <= ?2 AND user_id = ?3 ORDER BY timestamp DESC",
-                    ActivityLog.class)
-                    .setParameter(1, startDate)
-                    .setParameter(2, endDate)
-                    .setParameter(3, userId)
-                    .getResultList();
-            return logs;
+            sql += " AND user_id = '" + userId + "'";
         }
         
+        sql += " ORDER BY timestamp DESC";
+        
+        // SEC: Executing raw SQL with user input - clear sink point
         @SuppressWarnings("unchecked")
-        List<ActivityLog> logs = entityManager.createNativeQuery(
-                "SELECT * FROM activity_logs WHERE timestamp >= ?1 AND timestamp <= ?2 ORDER BY timestamp DESC",
-                ActivityLog.class)
-                .setParameter(1, startDate)
-                .setParameter(2, endDate)
-                .getResultList();
+        List<ActivityLog> logs = entityManager.createNativeQuery(sql, ActivityLog.class).getResultList();
+        
         return logs;
     }
     
@@ -90,12 +87,11 @@ class ActivityLogRepositoryCustomImpl {
      * @return List of activity logs with the specified action
      */
     public List<ActivityLog> findByAction(String action) {
-        String sql = "SELECT * FROM activity_logs WHERE action = ?1";
+        // SEC: SQL Injection - direct string concatenation
+        String sql = "SELECT * FROM activity_logs WHERE action = '" + action + "'";
         
         @SuppressWarnings("unchecked")
-        List<ActivityLog> logs = entityManager.createNativeQuery(sql, ActivityLog.class)
-                .setParameter(1, action)
-                .getResultList();
+        List<ActivityLog> logs = entityManager.createNativeQuery(sql, ActivityLog.class).getResultList();
         
         return logs;
     }
