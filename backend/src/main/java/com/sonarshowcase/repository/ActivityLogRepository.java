@@ -2,6 +2,7 @@ package com.sonarshowcase.repository;
 
 import com.sonarshowcase.model.ActivityLog;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.EntityManager;
@@ -17,7 +18,7 @@ import java.util.List;
  * source-to-sink path for SQL injection vulnerability demonstration.
  */
 @Repository
-public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> {
+public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long>, JpaSpecificationExecutor<ActivityLog> {
     
     /**
      * Finds all activity logs for a specific user
