@@ -29,17 +29,16 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     /**
-     * SEC: Wildcard CORS - allows any origin to access API
-     * This is a major security vulnerability
+     * CORS configuration restricted to trusted origins.
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")  // SEC: S5122 - Wildcard CORS
-                .allowedMethods("*")  // SEC: Allows all HTTP methods
-                .allowedHeaders("*")  // SEC: Allows all headers
+                .allowedOrigins("https://trustedwebsite.com")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
                 .exposedHeaders("*")
-                .allowCredentials(false); // Can't use true with wildcard
+                .allowCredentials(true);
     }
     
     /**
