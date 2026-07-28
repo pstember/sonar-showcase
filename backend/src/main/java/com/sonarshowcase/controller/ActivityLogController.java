@@ -1,5 +1,6 @@
 package com.sonarshowcase.controller;
 
+import com.sonarshowcase.dto.ActivityLogDto;
 import com.sonarshowcase.model.ActivityLog;
 import com.sonarshowcase.service.ActivityLogService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -130,10 +131,15 @@ public class ActivityLogController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "Activity log data", 
                 required = true, 
-                content = @Content(schema = @Schema(implementation = ActivityLog.class))
+                content = @Content(schema = @Schema(implementation = ActivityLogDto.class))
             )
-            @RequestBody ActivityLog activityLog) {
-        // MNT: No validation
+            @RequestBody ActivityLogDto activityLogDto) {
+        ActivityLog activityLog = new ActivityLog();
+        activityLog.setUserId(activityLogDto.getUserId());
+        activityLog.setAction(activityLogDto.getAction());
+        activityLog.setDetails(activityLogDto.getDetails());
+        activityLog.setTimestamp(activityLogDto.getTimestamp());
+        activityLog.setIpAddress(activityLogDto.getIpAddress());
         return ResponseEntity.ok(activityLogService.createActivityLog(activityLog));
     }
 }
